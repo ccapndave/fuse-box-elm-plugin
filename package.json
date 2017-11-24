@@ -1,6 +1,6 @@
 {
   "name": "fuse-box-elm-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A plugin for fuse-box for transpiling and bundling Elm programs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
