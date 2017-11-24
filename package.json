@@ -1,0 +1,34 @@
+{
+  "name": "fuse-box-elm-plugin",
+  "version": "1.0.0",
+  "description": "A plugin for fuse-box for transpiling and bundling Elm programs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --declaration"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ccapndave/fuse-box-elm-plugin.git"
+  },
+  "keywords": [
+    "fuse-box",
+    "elm",
+    "plugin"
+  ],
+  "author": "Dave Keen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ccapndave/fuse-box-elm-plugin/issues"
+  },
+  "homepage": "https://github.com/ccapndave/fuse-box-elm-plugin#readme",
+  "dependencies": {
+    "@types/node": "^8.0.53",
+    "@types/tmp": "0.0.33",
+    "tmp": "0.0.33"
+  },
+  "devDependencies": {
+    "fuse-box": "^2.5.0-beta.1",
+    "typescript": "^2.6.1"
+  }
+}
