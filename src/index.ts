@@ -24,11 +24,11 @@ export class ElmPluginClass implements Plugin {
     this.options = Object.assign({}, options);
   }
 
-  public init(context: WorkFlowContext) {
+  public init(context: WorkFlowContext): void {
     context.allowExtension(".elm");
   }
 
-  public async transform(file: File) {
+  public async transform(file: File): Promise<any> {
     file.loadContents();
 
     // Get the path to elm-make
@@ -65,7 +65,7 @@ export class ElmPluginClass implements Plugin {
   }
 }
 
-function getElmMakePath() {
+function getElmMakePath(): string {
   try {
     return resolve("node_modules/.bin/elm-make");
   } catch (_) {}
