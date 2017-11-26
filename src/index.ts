@@ -11,7 +11,7 @@ export interface ElmPluginOptions {
   debug?: boolean
 }
 
-class ElmPluginClass implements Plugin {
+export class ElmPluginClass implements Plugin {
 
   // Match Elm files
   public test: RegExp = /\.elm$/;
