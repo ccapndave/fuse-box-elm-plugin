@@ -1,11 +1,11 @@
 {
   "name": "fuse-box-elm-plugin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A plugin for fuse-box for transpiling and bundling Elm programs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc --declaration"
+    "prepare": "tsc --declaration"
   },
   "repository": {
     "type": "git",

@@ -3,9 +3,6 @@ import { resolve } from "path";
 import { readFile } from "fs";
 import { spawn } from "child_process";
 import { tmpName } from "tmp";
-import { promisify } from "util";
-
-const asyncReadFile = promisify(readFile);
 
 const tmp = () =>
   new Promise((resolve, reject) =>
@@ -17,7 +14,7 @@ export interface ElmPluginOptions {
   debug?: boolean;
 }
 
-class ElmPluginClass implements Plugin {
+export class ElmPluginClass implements Plugin {
   // Match Elm files
   public test: RegExp = /\.elm$/;
 
