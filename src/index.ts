@@ -1,13 +1,38 @@
 import { File, WorkFlowContext, Plugin } from "fuse-box";
 import { resolve } from "path";
 import { readFile } from "fs";
-import { spawn } from "child_process";
 import { tmpName } from "tmp";
+import * as spawn from "cross-spawn";
 
 const tmp = () =>
   new Promise((resolve, reject) =>
     tmpName((err, path) => (err ? reject(err) : resolve(path)))
   );
+
+const getElmMakePath = (): string => {
+  try {
+    return resolve("node_modules/.bin/elm-make");
+  } catch (_) {}
+
+  return "elm-make";
+};
+
+const handleError = (pathToMake: string, err: NodeJS.ErrnoException): void => {
+  if (err.code === "ENOENT") {
+    console.error(
+      `Could not find Elm compiler @ "${pathToMake}" \n Is it installed?`
+    );
+  } else if (err.code === "EACCES") {
+    console.error(
+      `Elm compiler @ "${pathToMake}" did not have permission to run. 
+      You may need give it executable permissions.`
+    );
+  } else {
+    console.error(
+      `Error attempting to run Elm compiler @ "${pathToMake}" \n ${err}`
+    );
+  }
+};
 
 export interface ElmPluginOptions {
   warn?: boolean;
@@ -21,7 +46,7 @@ export class ElmPluginClass implements Plugin {
   public options: ElmPluginOptions;
 
   constructor(options: ElmPluginOptions = {}) {
-    this.options = Object.assign({}, options);
+    this.options = { ...options };
   }
 
   public init(context: WorkFlowContext): void {
@@ -49,10 +74,13 @@ export class ElmPluginClass implements Plugin {
 
       const proc = spawn(elmMakePath, args, { stdio: "inherit" });
 
-      proc.on("error", err => reject(err));
-      proc.on("close", code => {
+      proc.on("error", (err: NodeJS.ErrnoException) =>
+        handleError(elmMakePath, err)
+      );
+
+      proc.on("close", (code: Number) => {
         if (code === 0) {
-          readFile(tmpFilename, (err, data) => {
+          readFile(tmpFilename, (err: NodeJS.ErrnoException, data: Buffer) => {
             err && reject(err);
             file.contents = data.toString();
             resolve(file);
@@ -63,14 +91,6 @@ export class ElmPluginClass implements Plugin {
       });
     });
   }
-}
-
-function getElmMakePath(): string {
-  try {
-    return resolve("node_modules/.bin/elm-make");
-  } catch (_) {}
-
-  return "elm-make";
 }
 
 export const ElmPlugin = (options?: ElmPluginOptions) =>
