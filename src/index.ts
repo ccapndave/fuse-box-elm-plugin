@@ -37,24 +37,6 @@ export class ElmPluginClass implements Plugin {
     return "elm-make";
   }
 
-  public handleError(elmMakePath: string, err: NodeJS.ErrnoException): void {
-    if (err.code === "ENOENT") {
-      console.error(
-        `Could not find Elm compiler @ "${elmMakePath}"
-         \n Is it installed? If not, please install "elm" via npm`
-      );
-    } else if (err.code === "EACCES") {
-      console.error(
-        `Elm compiler @ "${elmMakePath}" did not have permission to run. 
-        You may need give it executable permissions.`
-      );
-    } else {
-      console.error(
-        `Error attempting to run Elm compiler @ "${elmMakePath}" \n ${err}`
-      );
-    }
-  }
-
   public async transform(file: File): Promise<any> {
     file.loadContents();
 
@@ -77,16 +59,33 @@ export class ElmPluginClass implements Plugin {
 
       const proc: ChildProcess = spawn(elmMakePath, args, { stdio: "inherit" });
 
-      proc.on("error", (err: NodeJS.ErrnoException) =>
-        this.handleError(elmMakePath, err)
-      );
+      proc.on("error", (err: NodeJS.ErrnoException) => {
+        if (err.code === "ENOENT") {
+          reject(
+            `Could not find Elm compiler @ "${elmMakePath}"
+             \nHave you installed elm yet? If not, please install "elm" via npm`
+          );
+        } else if (err.code === "EACCES") {
+          reject(
+            `Elm compiler @ "${elmMakePath}" did not have permission to run
+            \nYou may need give it executable permissions`
+          );
+        } else {
+          reject(
+            `Error attempting to run Elm compiler @ "${elmMakePath}" \n ${err}`
+          );
+        }
+      });
 
       proc.on("close", (code: Number) => {
         if (code === 0) {
           readFile(tmpFilename, (err: NodeJS.ErrnoException, data: Buffer) => {
-            err && reject(err);
-            file.contents = data.toString();
-            resolve(file);
+            if (err) {
+              reject(err);
+            } else {
+              file.contents = data.toString();
+              resolve(file);
+            }
           });
         } else {
           reject("Failed to compile Elm.");
