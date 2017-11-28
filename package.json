@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "prepare": "tsc --declaration"
+    "prepare": "tsc --declaration",
+    "watch": "tsc --declaration --watch"
   },
   "repository": {
     "type": "git",
