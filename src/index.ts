@@ -1,9 +1,10 @@
 import { File, WorkFlowContext, Plugin } from "fuse-box";
 import { ChildProcess } from "child_process";
-import { resolve } from "path";
+import { resolve, relative } from "path";
 import { readFile } from "fs";
 import { tmpName } from "tmp";
 import * as spawn from "cross-spawn";
+import { findAllDependencies } from "find-elm-dependencies"
 
 const tmp = () =>
   new Promise((resolve, reject) =>
@@ -19,6 +20,8 @@ export class ElmPluginClass implements Plugin {
   // Match Elm files
   public test: RegExp = /\.elm$/;
 
+  public context: WorkFlowContext;
+
   public options: ElmPluginOptions;
 
   constructor(options: ElmPluginOptions = {}) {
@@ -26,6 +29,7 @@ export class ElmPluginClass implements Plugin {
   }
 
   public init(context: WorkFlowContext): void {
+    this.context = context;
     context.allowExtension(".elm");
   }
 
@@ -38,8 +42,23 @@ export class ElmPluginClass implements Plugin {
   }
 
   public async transform(file: File): Promise<any> {
-    file.loadContents();
+    if (this.context.useCache) {
+      if (file.loadFromCache()) {
+        const lastChangedFile = file.context.convertToFuseBoxPath(this.context.bundle.lastChangedFile);
+        const isElmDependency = file.analysis.dependencies.indexOf(lastChangedFile) >= 0;
 
+        // We never go any deeper since elm-make bundles for us
+        file.analysis.dependencies = [];
+
+        // If this isn't a dependency of the entry Elm file then there is no need to recompile
+        if (!isElmDependency) {
+          return;
+        }
+      }
+    }
+
+    file.loadContents();
+    
     // Get the path to elm-make
     const elmMakePath: string = this.getElmMakePath();
 
@@ -84,6 +103,27 @@ export class ElmPluginClass implements Plugin {
               reject(err);
             } else {
               file.contents = data.toString();
+
+              findAllDependencies(file.absPath)
+                .then((paths: string[]) => {
+                  if (this.context.useCache) {
+                    // Make the paths relative to the home directory
+                    paths = paths.map(path => relative(this.context.homeDir, path));
+
+                    file.analysis.dependencies = paths;
+
+                    this.context.emitJavascriptHotReload(file);
+                    this.context.cache.writeStaticCache(file, file.sourceMap);
+
+                    file.analysis.dependencies = [];
+                  }
+
+                  resolve(file);
+                })
+                .catch((err: string) => {
+                  reject(err);
+                });
+
               resolve(file);
             }
           });
