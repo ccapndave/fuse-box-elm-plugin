@@ -1,4 +1,5 @@
 import { File, WorkFlowContext, Plugin } from "fuse-box";
+//import { File, WorkFlowContext, Plugin } from "../../fuse-box/.dev";
 import { ChildProcess } from "child_process";
 import { resolve, relative } from "path";
 import { readFile } from "fs";
@@ -43,7 +44,7 @@ export class ElmPluginClass implements Plugin {
 
   public async transform(file: File): Promise<any> {
     if (this.context.useCache) {
-      if (file.loadFromCache()) {
+      if (this.context.bundle && this.context.bundle.lastChangedFile && file.loadFromCache()) {
         const lastChangedFile = file.context.convertToFuseBoxPath(this.context.bundle.lastChangedFile);
         const isElmDependency = file.analysis.dependencies.indexOf(lastChangedFile) >= 0;
 
