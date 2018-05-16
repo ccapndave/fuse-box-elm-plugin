@@ -4,6 +4,7 @@ import { ChildProcess } from "child_process";
 import { resolve, relative } from "path";
 import { readFile } from "fs";
 import { tmpName } from "tmp";
+import * as path from "path"
 import * as spawn from "cross-spawn";
 import { findAllDependencies } from "find-elm-dependencies"
 
@@ -77,7 +78,7 @@ export class ElmPluginClass implements Plugin {
         file.absPath
       ].filter(x => x !== null);
 
-      const proc: ChildProcess = spawn(elmMakePath, args, { stdio: "inherit" });
+      const proc: ChildProcess = spawn(elmMakePath, args, { cwd: this.context.homeDir, stdio: "inherit" });
 
       proc.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "ENOENT") {
@@ -129,7 +130,7 @@ export class ElmPluginClass implements Plugin {
             }
           });
         } else {
-          reject("Failed to compile Elm.");
+          reject("Failed to compile Elm. code=" + code);
         }
       });
     });
