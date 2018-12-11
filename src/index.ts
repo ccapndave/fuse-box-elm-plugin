@@ -2,9 +2,8 @@ import { File, WorkFlowContext, Plugin } from "fuse-box";
 //import { File, WorkFlowContext, Plugin } from "../../fuse-box/.dev";
 import { ChildProcess } from "child_process";
 import { resolve, relative } from "path";
-import { readFile } from "fs";
+import { readFile, existsSync } from "fs";
 import { tmpName } from "tmp";
-import * as path from "path"
 import * as spawn from "cross-spawn";
 import { findAllDependencies } from "find-elm-dependencies"
 
@@ -16,6 +15,7 @@ const tmp = () =>
 export interface ElmPluginOptions {
   warn?: boolean;
   debug?: boolean;
+  optimize?: boolean;
 }
 
 export class ElmPluginClass implements Plugin {
@@ -35,12 +35,24 @@ export class ElmPluginClass implements Plugin {
     context.allowExtension(".elm");
   }
 
-  public getElmMakePath(): string {
-    try {
-      return resolve("node_modules/.bin/elm-make");
-    } catch (_) {}
+  private isElm019(): boolean {
+    return existsSync(resolve(this.context.homeDir, "elm.json"));
+  }
 
-    return "elm-make";
+  private getElmMakePath(): string {
+    if (this.isElm019()) {
+      try {
+        return resolve("node_modules/.bin/elm");
+      } catch (_) { }
+
+      return "elm";
+    } else {
+      try {
+        return resolve("node_modules/.bin/elm-make");
+      } catch (_) { }
+
+      return "elm-make";
+    }
   }
 
   public async transform(file: File): Promise<any> {
@@ -60,7 +72,7 @@ export class ElmPluginClass implements Plugin {
     }
 
     file.loadContents();
-    
+
     // Get the path to elm-make
     const elmMakePath: string = this.getElmMakePath();
 
@@ -69,14 +81,23 @@ export class ElmPluginClass implements Plugin {
 
     return new Promise((resolve, reject) => {
       // Construct the arguments for elm-make
-      const args = [
-        "--yes",
-        "--output",
-        tmpFilename,
-        this.options.warn ? "--warn" : null,
-        this.options.debug ? "--debug" : null,
-        file.absPath
-      ].filter(x => x !== null);
+      const args = this.isElm019() ?
+        [
+          `make`,
+          `--output=${tmpFilename}`,
+          this.options.optimize ? "--optimize" : null,
+          this.options.debug ? "--debug" : null,
+          file.absPath
+        ].filter(x => x !== null)
+        :
+        [
+          "--yes",
+          "--output",
+          tmpFilename,
+          this.options.warn ? "--warn" : null,
+          this.options.debug ? "--debug" : null,
+          file.absPath
+        ].filter(x => x !== null);
 
       const proc: ChildProcess = spawn(elmMakePath, args, { cwd: this.context.homeDir, stdio: "inherit" });
 
