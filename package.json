@@ -28,6 +28,7 @@
     "@types/tmp": "0.0.33",
     "cross-spawn": "^6.0.5",
     "find-elm-dependencies": "^2.0.0",
+    "terser": "^3.13.1",
     "tmp": "0.0.33"
   },
   "devDependencies": {

@@ -16,6 +16,7 @@ export interface ElmPluginOptions {
   warn?: boolean;
   debug?: boolean;
   optimize?: boolean;
+  uglify?: boolean;
 }
 
 export class ElmPluginClass implements Plugin {
@@ -141,13 +142,38 @@ export class ElmPluginClass implements Plugin {
                     file.analysis.dependencies = [];
                   }
 
-                  resolve(file);
+                  if (this.options.uglify) {
+                    const Terser = require("terser");
+
+                    const compressed = Terser.minify(file.contents, {
+                      compress: {
+                        pure_funcs: "F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",
+                        pure_getters: true,
+                        keep_fargs: false,
+                        unsafe_comps: true,
+                        unsafe: true
+                      }
+                    });
+
+                    if (compressed.error) {
+                      reject(compressed.error);
+                    } else {
+                      const mangled = Terser.minify(compressed.code, {
+                        mangle: {}
+                      });
+
+                      if (mangled.error) {
+                        reject(mangled.error);
+                      } else {
+                        file.contents = mangled.code;
+                        resolve(file);
+                      }
+                    }
+                  }
                 })
                 .catch((err: string) => {
                   reject(err);
                 });
-
-              resolve(file);
             }
           });
         } else {

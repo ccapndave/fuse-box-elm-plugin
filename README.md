@@ -36,3 +36,14 @@ ElmPlugin({
   debug: true
 })
 ```
+
+## Uglifying
+
+This plugin implements the specific arguments that need to be passed to `uglify-js` (actually we use `terser`) in order to minify an optimized Elm file.  To turn this on use:
+
+```ts
+ElmPlugin({
+  optimize: true,
+  uglify: true
+})
+```
