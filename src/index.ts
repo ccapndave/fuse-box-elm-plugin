@@ -169,6 +169,8 @@ export class ElmPluginClass implements Plugin {
                         resolve(file);
                       }
                     }
+                  } else {
+                    resolve(file);
                   }
                 })
                 .catch((err: string) => {
