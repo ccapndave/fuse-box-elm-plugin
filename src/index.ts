@@ -17,6 +17,7 @@ export interface ElmPluginOptions {
   debug?: boolean;
   optimize?: boolean;
   uglify?: boolean;
+  supportSafari10?: boolean;
 }
 
 export class ElmPluginClass implements Plugin {
@@ -159,7 +160,12 @@ export class ElmPluginClass implements Plugin {
                       reject(compressed.error);
                     } else {
                       const mangled = Terser.minify(compressed.code, {
-                        mangle: {}
+                        mangle: {
+                          safari10: this.options.supportSafari10
+                        },
+                        output: {
+                          safari10: this.options.supportSafari10
+                        }
                       });
 
                       if (mangled.error) {
