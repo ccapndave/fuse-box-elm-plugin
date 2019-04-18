@@ -16,6 +16,7 @@ export interface ElmPluginOptions {
   warn?: boolean;
   debug?: boolean;
   optimize?: boolean;
+  root?: string;
   uglify?: boolean;
   supportSafari10?: boolean;
 }
@@ -38,7 +39,7 @@ export class ElmPluginClass implements Plugin {
   }
 
   private isElm019(): boolean {
-    return existsSync(resolve(this.context.homeDir, "elm.json"));
+    return existsSync(resolve(this.options.root || this.context.homeDir, "elm.json"));
   }
 
   private getElmMakePath(): string {
