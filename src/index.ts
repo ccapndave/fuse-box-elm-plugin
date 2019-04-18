@@ -16,6 +16,7 @@ export interface ElmPluginOptions {
   warn?: boolean;
   debug?: boolean;
   optimize?: boolean;
+  root?: string;
   uglify?: boolean;
   supportSafari10?: boolean;
 }
@@ -38,7 +39,11 @@ export class ElmPluginClass implements Plugin {
   }
 
   private isElm019(): boolean {
-    return existsSync(resolve(this.context.homeDir, "elm.json"));
+    return existsSync(resolve(this.options.root || this.context.homeDir, "elm.json"));
+  }
+
+  private isContainsElmPackage018(): boolean {
+    return existsSync(resolve(this.options.root || this.context.homeDir, "elm-package.json"));
   }
 
   private getElmMakePath(): string {
@@ -55,6 +60,11 @@ export class ElmPluginClass implements Plugin {
 
       return "elm-make";
     }
+  }
+
+  private isContainsElmPackage() : boolean {
+    return this.isElm019() || this.isContainsElmPackage018();
+    
   }
 
   public async transform(file: File): Promise<any> {
@@ -100,8 +110,13 @@ export class ElmPluginClass implements Plugin {
           this.options.debug ? "--debug" : null,
           file.absPath
         ].filter(x => x !== null);
-
-      const proc: ChildProcess = spawn(elmMakePath, args, { cwd: this.context.homeDir, stdio: "inherit" });
+      
+      if(!this.isContainsElmPackage()){
+        console.warn("Cannot find elm.json or elm-pacakge.json maybe you need to specify the path with parameter root.")
+        return;
+      }
+      
+      const proc: ChildProcess = spawn(elmMakePath, args, { cwd: this.options.root || this.context.homeDir, stdio: "inherit" });
 
       proc.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "ENOENT") {
