@@ -6,6 +6,7 @@ import { readFile, existsSync } from "fs";
 import { tmpName } from "tmp";
 import * as spawn from "cross-spawn";
 import { findAllDependencies } from "find-elm-dependencies"
+import * as hasbin from "hasbin";
 
 const tmp = () =>
   new Promise((resolve, reject) =>
@@ -44,7 +45,10 @@ export class ElmPluginClass implements Plugin {
   private getElmMakePath(): string {
     if (this.isElm019()) {
       try {
-        return resolve("node_modules/.bin/elm");
+        const path = resolve("node_modules/.bin/elm");
+        if (existsSync(path)) return path;
+
+        if (hasbin.sync("elm")) return "elm";
       } catch (_) { }
 
       return "elm";
@@ -107,7 +111,8 @@ export class ElmPluginClass implements Plugin {
         if (err.code === "ENOENT") {
           reject(
             `Could not find Elm compiler @ "${elmMakePath}"
-             \nHave you installed elm yet? If not, please install "elm" via npm`
+             \nHave you installed elm yet? If not, please install "elm" via npm
+             or make it available on the system path.`
           );
         } else if (err.code === "EACCES") {
           reject(

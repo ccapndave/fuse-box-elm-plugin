@@ -28,10 +28,12 @@
     "@types/tmp": "0.0.33",
     "cross-spawn": "^6.0.5",
     "find-elm-dependencies": "^2.0.0",
+    "hasbin": "^1.2.3",
     "terser": "^3.13.1",
     "tmp": "0.0.33"
   },
   "devDependencies": {
+    "@types/hasbin": "^1.2.0",
     "fuse-box": "^3.6.0",
     "typescript": "^3.2.2"
   }
